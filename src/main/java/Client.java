@@ -16,7 +16,7 @@ public class Client {
         if (socket.isConnected()) {
             MessageReceiver messageReceiver = new MessageReceiver(System.in);
             MessageSender messageSender = new MessageSender(socket.getOutputStream());
-            registration(messageReceiver, messageSender);
+            registrationOrAuthorization(messageReceiver, messageSender);
 
             new Thread(new SocketRunnable(socket)).start();
 
@@ -27,18 +27,30 @@ public class Client {
         }
     }
 
-    public void registration(MessageReceiver messageReceiver, MessageSender messageSender) {
+    public void registrationOrAuthorization(MessageReceiver messageReceiver, MessageSender messageSender) {
         System.out.println("=============================");
         System.out.println("Добро пожаловать в чат!");
         System.out.println("=============================");
 
-        System.out.println("Введите имя:");
-        String name = messageReceiver.readMessage();
-        System.out.println("Введите пароль:");
-        String password = messageReceiver.readMessage();
+        System.out.println("Нажмите:\n 1 для Авторизации: \n 2 для Регистрации: ");
+        int numFromConsole = Integer.parseInt(messageReceiver.readMessage().trim());
+        if (numFromConsole == 1) {
+            String name = getString(messageReceiver, "Введите имя:").toUpperCase();
+            String password = getString(messageReceiver, "Введите пароль:");
+            messageSender.sendMessage("Authorization " + name + " " + password);
+        } else if (numFromConsole == 2) {
+            String name = getString(messageReceiver, "Введите имя:").toUpperCase();
+            String password = getString(messageReceiver, "Введите пароль:");
+            messageSender.sendMessage("Registration " + name + " " + password);
+        } else {
+            System.err.println("Введите 1 или 2");
+            registrationOrAuthorization(messageReceiver, messageSender);
+        }
 
-        messageSender.sendMessage("Registration: " + name + " " + password);
-//        messageSender.sendMessage(password);
+    }
 
+    private String getString(MessageReceiver messageReceiver, String userHint) {
+        System.out.println(userHint);
+        return messageReceiver.readMessage().trim();
     }
 }
